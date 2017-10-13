@@ -1,8 +1,6 @@
 import os
 import gzip
-
-
-outputFile = open("pythonOutput.csv", "w")
+import xlwt
 
 FinalList = list()
 PropList = list()
@@ -14,7 +12,12 @@ print(os.listdir())
 
 for i in range(1, molNum):
     # ОТКРЫВАЕМ И РАСПАКОВЫВАЕМ ФАЙЛ СО СВОЙСТВАМИ МОЛЕКУЛЫ
-    x_file = gzip.open(os.path.join('M000' + str(i), "proparc.gz"), 'r')
+    if i < 10:
+        global x_file
+        x_file = gzip.open(os.path.join('M000' + str(i), "proparc.gz"), 'r')
+    else:
+        x_file = gzip.open(os.path.join('M00' + str(i), "proparc.gz"), 'r')
+
     lines = x_file.readlines()
     length = len(lines)
 
@@ -35,8 +38,6 @@ for i in range(1, molNum):
         if lines[line].startswith(b"PROP VALUE CORR_ENERGIES", 0):
             PropList.append(lines[line + 1])
 
-
-
     for j in PropList:
         j.decode()
 
@@ -47,6 +48,7 @@ for q in range(0, len(PropList)):
 
 StNum = molNum
 ColNum = 4
+
 Matrix = [[0 for x in range(StNum)] for y in range(ColNum)]
 
 
@@ -77,23 +79,27 @@ for i in range(3, len(SplitList), 4):
     Matrix[3][q4] = SplitList[i][4]
     q4 += 1
 
-
-print(Matrix)
-
-
 for i in range(ColNum):
     for j in range(1, StNum):
         for k in str(Matrix[i][j]):
-            # if k not in "1, 2, 3, 4, 5, 6, 7, 8, 9, 0, ., -":
-            # print(k)
             k.replace("b" or "'", " ")
 
-print(Matrix)
+wb = xlwt.Workbook()
+ws = wb.add_sheet("Properties")
+ws.write(0, 0, "DIPOLE_MOMENTUM, Debye")
+ws.write(0, 1, "TOTAL ENERGY, Eh")
+ws.write(0, 2, "E_HOMO,eV")
+ws.write(0, 3, "E_LUMO,eV")
 
-for i in range(ColNum):
-    for j in range(StNum):
-        outputFile.write(str(Matrix[i][j])[2:len(str(Matrix[i][j])) - 1] + "\n")
-    outputFile.write("\n")
+for i in range(1, StNum):
+    ws.write(i, 0, Matrix[0][i].decode())
+    ws.write(i, 1, Matrix[1][i].decode())
+    ws.write(i, 2, Matrix[2][i].decode())
+    ws.write(i, 3, Matrix[3][i].decode())
+
+
+wb.save("spartanOutput.xls")
+
 
 
 
