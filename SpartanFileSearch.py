@@ -6,23 +6,25 @@ FinalList = list()
 PropList = list()
 SplitList = list()
 
-molNum = len(os.listdir()) - 9
+filename = "EbindTest_EDF-2_6-31G%2A.spardir"
+molNum = len(os.listdir(filename)) - 7
 print(len(os.listdir()))
 print(os.listdir())
 
 for i in range(1, molNum):
-    # ОТКРЫВАЕМ И РАСПАКОВЫВАЕМ ФАЙЛ СО СВОЙСТВАМИ МОЛЕКУЛЫ
+# ОТКРЫВАЕМ И РАСПАКОВЫВАЕМ ФАЙЛ СО СВОЙСТВАМИ МОЛЕКУЛЫ
     if i < 10:
         global x_file
-        x_file = gzip.open(os.path.join('M000' + str(i), "proparc.gz"), 'r')
+        x_file = gzip.open(os.path.join(filename,'M000' + str(i), "proparc.gz"), 'r')
     else:
-        x_file = gzip.open(os.path.join('M00' + str(i), "proparc.gz"), 'r')
+        x_file = gzip.open(os.path.join(filename, 'M00' + str(i), "proparc.gz"), 'r')
 
     lines = x_file.readlines()
     length = len(lines)
 
-    # ВЫРЕЗАЕМ НУЖНЫЕ СТРОКИ ИЗ OUTPUT SPARTAN14
+# ВЫРЕЗАЕМ НУЖНЫЕ СТРОКИ ИЗ OUTPUT SPARTAN14
     for line in range(length):
+
         if lines[line].startswith(b"PROP VALUE E_HOMO", 0):
             PropList.append(lines[line])
         if lines[line].startswith(b"PROP VALUE E_LUMO", 0):
@@ -33,7 +35,7 @@ for i in range(1, molNum):
         #     PropList.append(lines[line])
         # if lines[line].startswith(b"PROP VALUE EST_POLARIZ", 0):
         #     PropList.append(lines[line])
-        if lines[line].startswith(b"PROP VALUE DIPOLE_MAG", 0):
+        if lines[line].startswith(b"PROP VALUE DIPOLE_MAG =", 0):
             PropList.append(lines[line])
         if lines[line].startswith(b"PROP VALUE CORR_ENERGIES", 0):
             PropList.append(lines[line + 1])
@@ -43,6 +45,7 @@ for i in range(1, molNum):
 
 for q in range(0, len(PropList)):
     SplitList.append(PropList[q].split())
+print(SplitList)
 
 # МУТИМ МАТРИЦУ
 
@@ -62,16 +65,19 @@ Matrix[3][0] = "E_LUMO,eV"
 q1 = 1
 for i in range(0, len(SplitList), 4):
     Matrix[0][q1] = SplitList[i][4]
+
     q1 += 1
 
 q2 = 1
 for i in range(1, len(SplitList), 4):
     Matrix[1][q2] = SplitList[i][0]
+
     q2 += 1
 
 q3 = 1
 for i in range(2, len(SplitList), 4):
     Matrix[2][q3] = SplitList[i][4]
+    print(SplitList[i][4])
     q3 += 1
 
 q4 = 1
@@ -82,6 +88,7 @@ for i in range(3, len(SplitList), 4):
 for i in range(ColNum):
     for j in range(1, StNum):
         for k in str(Matrix[i][j]):
+            print(Matrix[i][j])
             k.replace("b" or "'", " ")
 
 wb = xlwt.Workbook()
@@ -99,7 +106,3 @@ for i in range(1, StNum):
 
 
 wb.save("spartanOutput.xls")
-
-
-
-
